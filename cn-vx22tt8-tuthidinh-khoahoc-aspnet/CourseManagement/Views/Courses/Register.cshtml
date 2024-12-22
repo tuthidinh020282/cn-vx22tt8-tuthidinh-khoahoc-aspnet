@@ -1,0 +1,164 @@
+﻿@{
+    ViewData["Title"] = "Thông tin Khóa học";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+@using CourseManagement.Helpers
+@using CourseManagement.ViewModels.Courses
+@model CourseViewModel
+
+<!-- Page header -->
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h1 class="text-bold">Khóa học</h1>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Main content -->
+<section class="content">
+    <div class="card">
+        <div class="card-header">
+            <div class="row">
+                <h5 class="title">Thông tin chi tiết</h5>
+            </div>
+        </div>
+        <div class="card-body">
+            <form id="frmInput">
+                <div class="row mb-2">
+                    <div class="col-md-3">
+                        <label asp-for="CourseCode" class="required">Mã khóa học</label>
+                        <input asp-for="CourseCode" type="text" class="form-control text-uppercase" maxlength="100" autocomplete="off" />
+                    </div>
+                    <div class="col-md-7">
+                        <label asp-for="CourseName" class="required">Tên khóa học</label>
+                        <input asp-for="CourseName" type="text" class="form-control" maxlength="100" autocomplete="off" />
+                    </div>
+                    <div class="col-md-2">
+                        @if (Model.IsUpdate)
+                        {
+                            <label asp-for="Status">Trạng thái</label>
+                            @Html.DropDownListFor(
+                                model => model.Status,
+                                new SelectList(ValueTextHelper.GetCourseStatuses(false), "Value", "Text", Model.Status),
+                                User.IsInRole("User")
+                                    ? new { @class = "select2", @style = "width: 100%;", @disabled = User.IsInRole("User") }
+                                    : new { @class = "select2", @style = "width: 100%;" })
+                        }
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-4">
+                        <label asp-for="CourseImage">Hình ảnh</label>
+                        <br />
+                        <div class="custom-file">
+                            <input type="file" accept="image/*" class="custom-file-input" onchange="displayImage()" id="CourseImage">
+                            <label class="custom-file-label" for="CourseImage">Chọn hình ảnh</label>
+                        </div>
+                        <div class="col-auto">
+                            <img id="imagePreview" class="img-lg d-none">
+                        </div>
+                        <div class="col d-flex align-items-center">
+                            <p id="imageInfo" class="col d-flex align-items-center"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-md-2">
+                        <label asp-for="Duration" class="required">Thời lượng (theo giờ)</label>
+                        <input asp-for="Duration" type="text" class="form-control currency w-50" data-type="currency" autocomplete="off" />
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="StartDate" class="required">Thời gian (bắt đầu)</label>
+                        <div class="input-group date max-w-150px" id="dvStartDate" data-target-input="nearest">
+                            <input type="text" id="tbStartDate" name="StartDate" class="form-control datetimepicker-input" value="@Model.StartDate" data-target="#dvStartDate" autocomplete="off" />
+                            <div class="input-group-append" data-target="#dvStartDate" data-toggle="datetimepicker">
+                                <div class="input-group-text">
+                                    <i class="fa fa-calendar"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="StartDate" class="required">Thời gian (kết thúc)</label>
+                        <div class="input-group date max-w-150px" id="dvEndDate" data-target-input="nearest">
+                            <input type="text" id="tbEndDate" name="EndDate" class="form-control datetimepicker-input" value="@Model.EndDate" data-target="#dvEndDate" autocomplete="off" />
+                            <div class="input-group-append" data-target="#dvEndDate" data-toggle="datetimepicker">
+                                <div class="input-group-text">
+                                    <i class="fa fa-calendar"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="Price" class="required">Giá khóa học</label>
+                        <input asp-for="Price" type="text" class="form-control currency w-75" data-type="currency" autocomplete="off" />
+                    </div>
+                    <div class="col-md-2">
+                        <label asp-for="Lecturer" class="required">Giảng viên</label>
+                        <input asp-for="Lecturer" type="text" class="form-control" autocomplete="off" maxlength="100" />
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-12">
+                        <label asp-for="MainContent">Nội dung chính</label>
+                        <textarea asp-for="MainContent" class="form-control" type="text" rows="8" maxlength="1000"></textarea>
+                    </div>
+                </div>
+                @if (Model.IsUpdate)
+                {
+                    <div class="row mb-2">
+                        <div class="col-md-4">
+                            <label>Được tạo lúc: </label> <span>@Model.CreatedAt.ToString(WebConstants.DATE_TIME_FORMAT_VN)</span>
+                        </div>
+                        @if (Model.UpdatedAt.HasValue)
+                        {
+                            <div class="col-md-4">
+                                <label>Thời gian cập nhật: </label> <span>@Model.UpdatedAt?.ToString(WebConstants.DATE_TIME_FORMAT_VN)</span>
+                            </div>
+                        }
+                        <div class="col-md-4">
+                            <label>Lần cuối thay đổi: </label> <span>@Model.LastChanged</span>
+                        </div>
+                    </div>
+                }
+                <div class="row mb-2">
+                    <div class="col-md-12 text-right">
+                        @if (User.IsInRole("Admin"))
+                        {
+                            <button id="btnSave" type="button" onclick="save()" class="btn btn-primary">@(Model.IsUpdate ? "Cập nhật" : "Thêm")</button>
+                        }
+                        else if (Model.IsUpdate)
+                        {
+                            if (Model.CanRegister)
+                            {
+                                <button id="btnRegisterEnrollment" type="button" onclick="registerEnrollment(@Model.CourseId)" class="btn btn-outline-success">Đăng ký</button>
+                            }
+                            else if (Model.CanCancel)
+                            {
+                                <button id="btnDeleteEnrollment" type="button" onclick="deleteEnrollment(@Model.CourseId)" class="btn btn-outline-danger">Hủy đăng ký</button>
+                            }
+                        }
+                        <a onclick="history.back()" class="btn btn-primary">Quay lại</a>
+                        @Html.HiddenFor(model => model.CourseId)
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+@section scripts {
+    <!-- JS -->
+    <script src="../../js/courses.js?v=@(WebConstants.CLIENT_VERSION)"></script>
+    <!-- bs-custom-file-input -->
+    <script src="../../plugins/bs-custom-file-input/bs-custom-file-input.min.js"></script>
+    <script>
+        avoidFormResubmission();
+
+        $(function () { bsCustomFileInput.init(); });
+    </script>
+}
